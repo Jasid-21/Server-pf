@@ -11,7 +11,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(require('./routes/loginRoutes.js'));
 app.use(require('./routes/signupRoutes.js'));
 
+app.get('/', function(req, resp) {
+    resp.send("Hello world!!");
+})
 
+app.get('/testing', function(req, resp) {
+    const ind = req.query.ind;
+    console.log(ind);
+
+    resp.send("This works");
+})
 
 // Add new intruder detenction to database.
 // Add new fire detection to database.
