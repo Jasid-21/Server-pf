@@ -7,9 +7,6 @@ const connection = require('./database');
 
 
 router.use(cookieParser());
-router.get('/login', function(req, res) {
-    res.sendFile(path.join(__dirname, '..', 'public', 'login.html'));
-});
 
 router.post('/login', function(req, resp) {
     const username = req.query.username;

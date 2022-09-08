@@ -15,12 +15,26 @@ app.get('/', function(req, resp) {
     resp.send("Hello world!!");
 })
 
-app.get('/testing', function(req, resp) {
-    const ind = req.query.ind;
-    console.log(ind);
+app.get('/check_state', function(req, resp) {
+    console.log("Enter in check state");
+    resp.status(200).send();
+    /*
+    const session_id = req.query.session_id;
 
-    resp.send("This works");
-})
+    connection.query(`SELECT Id FROM Sessions WHERE Session_id = '${session_id}'`, function(error, data) {
+        if (error) {
+            console.log(error);
+            resp.status(500).send({message: "Error trying to connect with database..."});
+        } else {
+            if (data.length > 0) {
+                resp.status(200).send();
+            } else {
+                resp.status(401).send();
+            }
+        }
+    });
+    */
+});
 
 // Add new intruder detenction to database.
 // Add new fire detection to database.
