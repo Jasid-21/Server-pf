@@ -15,13 +15,11 @@ app.get('/', function(req, resp) {
     resp.send("Hello world!!");
 })
 
-app.get('/check_state', function(req, resp) {
+app.get('/check_user', function(req, resp) {
     console.log("Enter in check state");
-    resp.status(200).send();
-    /*
     const session_id = req.query.session_id;
 
-    connection.query(`SELECT Id FROM Sessions WHERE Session_id = '${session_id}'`, function(error, data) {
+    connection.query(`SELECT Id FROM sessions WHERE Session = '${session_id}'`, function(error, data) {
         if (error) {
             console.log(error);
             resp.status(500).send({message: "Error trying to connect with database..."});
@@ -33,13 +31,13 @@ app.get('/check_state', function(req, resp) {
             }
         }
     });
-    */
 });
 
 // Add new intruder detenction to database.
 // Add new fire detection to database.
 // Consult database to show info.
 // Send response to hardware.
+// Check hardware status.
 
 
 
