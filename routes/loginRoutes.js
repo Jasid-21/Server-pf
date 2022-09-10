@@ -4,6 +4,7 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
 const connection = require('./database');
+const moment = require('moment');
 
 
 router.use(cookieParser());
@@ -15,36 +16,39 @@ router.post('/login', function(req, resp) {
     connection.query(`SELECT * FROM users WHERE Username = '${username}'`, function(error, data){
         if(error){
             console.log(error);
-            resp.status(500).send("Error logining. Please try later...");
+            resp.status(500).send({message: "Error logining. Please try later..."});
         }else{
             if(data.length > 0){
                 const hash = data[0].Pass;
+                console.log(pass);
+                console.log(hash);
                 if(bcrypt.compare(pass, hash)){
                     create_session(Number(data[0].Id)).then(function(resolved){
-                        resp.cookie('session_id', resolved.token, {maxAge: 2600000*1000}).send({status: 1});
+                        resp.status(200).send({session_id: resolved.token, user_id: data[0].Id});
                     }, function(rejected){
                         console.log(rejected);
-                        resp.status(500).send({status: 0, message: "Error creating session..."});
+                        resp.status(500).send({message: "Error creating session..."});
                     });
                 }else{
-                    resp.status(400).send();
+                    resp.status(401).send({message: "Incorrect user ot password..."});
                 }
             }else{
-                resp.send({status: 0, message: "User not found..."});
+                resp.status(401).send({message: "Incorrect user ot password..."});
             }
         }
     });
 });
 
 router.post('/logout', function(req, resp){
-    const cookie = req.cookies['session_id'];
+    const session = req.query.session_id;
+    console.log("Enter in logout!");
 
-    connection.query(`DELETE FROM Sessions WHERE Session = '${cookie}'`, function(error){
+    connection.query(`DELETE FROM sessions WHERE Session = '${session}'`, function(error){
         if(error){
             console.log(error);
-            resp.status(500).send({status: 0, message: error});
+            resp.status(500).send({message: "Error loging out. Please try later..."});
         }else{
-            resp.status(200).send({status: 1});
+            resp.status(200).send();
         }
     });
 });
@@ -57,6 +61,7 @@ router.post('/logout', function(req, resp){
 //FUNCTIONS.
 async function create_session(user){
     return(new Promise(async function(resolve, reject){
+        const date = moment().format('YYYY-MM-DD hh:mm:ss');
         var id;
         if(typeof user == "string"){
             id = await get_user_id(user)
@@ -67,13 +72,14 @@ async function create_session(user){
         if(typeof id != "number"){
             reject({status: 0, message: "Error creating session..."});
         }else{
-            const token = create_token(30);
-            connection.query(`INSERT INTO sessions (User_id, Session) VALUES ('${id}', '${token}')`, function(error){
+            const token = create_token(70);
+            connection.query(`INSERT INTO sessions (User_id, Session, Session_date) VALUES 
+            ('${id}', '${token}', '${date}')`, function(error){
                 if(error){
                     console.log(error);
                     reject({status: 0, message: "Error creating session..."});
                 }else{
-                    resolve({status: 1, token: token})
+                    resolve({status: 1, token})
                 }
             });
         }

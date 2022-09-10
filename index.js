@@ -39,6 +39,10 @@ app.get('/check_user', function(req, resp) {
 // Send response to hardware.
 // Check hardware status.
 
+app.get('/get_data', function(req, resp) {
+    
+});
+
 
 
 // Functions

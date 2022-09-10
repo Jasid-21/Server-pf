@@ -30,7 +30,7 @@ router.post('/signup', function(req, resp) {
                             if(response.status == 0){
                                 resp.status(500).send({message: "Error creating session"});
                             }else{
-                                resp.status(200).send({session_id: response.token});
+                                resp.status(200).send({session_id: response.token, user_id: id});
                             }
                         }).catch(function(error){
                             console.log(error)
