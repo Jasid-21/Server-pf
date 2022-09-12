@@ -41,7 +41,7 @@ router.get('/history', function (req,res){
 app.post('/resp',(req,res)=>{
 
     connection.query(`INSERT INTO User_resps(User_resp) VALUES (?) `,[
-        req.body.User_resp
+        req.query.User_resp
     ])
 
 })
