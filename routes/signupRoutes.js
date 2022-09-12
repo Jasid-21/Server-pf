@@ -9,14 +9,16 @@ const bcrypt = require('bcrypt');
 router.use(cookieParser());
 
 
-router.get('/signup', function(req, resp) {
-    resp.sendFile(path.join(__dirname, '..', 'public', 'signup.html'));
-});
+
 
 router.post('/signup', function(req, resp) {
     const username = req.query.username;
     const pass = req.query.password;
-    console.log(pass);
+
+    const Hard_serie = req.query.Hard_serie;
+    const Instalation_date = req.query.Instalation_date;
+    const Adress = req.query.Adress;
+    const create_date = req.query.Create_date;   
 
     connection.query(`SELECT * FROM users WHERE Username = '${username}'`, function(error, data){
         if(error){
@@ -27,8 +29,8 @@ router.post('/signup', function(req, resp) {
                 resp.send({status: 0, message: "This username is alredy in use"});
             }else{
                 const password = bcrypt.hashSync(pass, 10);
-                connection.query(`INSERT INTO users (Username, Pass) 
-                VALUES ('${username}', '${password}')`, function(error, ret){
+                connection.query(`INSERT INTO users (Username, Pass, Creation_date, Hard_serie, Instalation_date, Address) 
+                VALUES ('${username}', '${password}', '${Creation_date}', '${Hard_serie}', '${Instalation_date}', '${Address}')`, function(error, ret){
                     if(error){
                         console.log(error);
                         resp.status(500);

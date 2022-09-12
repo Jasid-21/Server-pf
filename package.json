@@ -12,9 +12,15 @@
     "bcrypt": "^5.0.1",
     "cookie-parser": "^1.4.6",
     "express": "^4.18.1",
-    "mysql": "^2.18.1"
+    "mysql": "^2.18.1",
+    "serialport": "^10.4.0",
+    "socket.io": "^4.5.1"
   },
   "devDependencies": {
+    "@babel/cli": "^7.18.10",
+    "@babel/core": "^7.19.0",
+    "@babel/node": "^7.18.10",
+    "@babel/preset-env": "^7.19.0",
     "nodemon": "^2.0.19"
   }
 }
