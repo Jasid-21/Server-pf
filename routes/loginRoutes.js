@@ -20,10 +20,9 @@ router.post('/login', function(req, resp) {
         }else{
             if(data.length > 0){
                 const hash = data[0].Pass;
-                console.log(pass);
-                console.log(hash);
                 if(bcrypt.compare(pass, hash)){
                     create_session(Number(data[0].Id)).then(function(resolved){
+                        console.log(data[0].Id);
                         resp.status(200).send({session_id: resolved.token, user_id: data[0].Id});
                     }, function(rejected){
                         console.log(rejected);

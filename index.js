@@ -11,8 +11,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(require('./routes/loginRoutes.js'));
 app.use(require('./routes/signupRoutes.js'));
 
-app.get('/', function(req, resp) {
-    resp.send("Hello world!!");
+// Check hardware status.
+app.get('/check_status', function(req, resp) {
+    const session = req.query.session;
+    get_session(session).then(function(resolved) {
+        if (resolved) {
+            //[Here must be wrote the algorythm to check status to hardware]
+            resp.status(200).send();
+        } else {
+            resp.status(401).send({message: "Unauthorized action. Session not found..."});
+        }
+    }, function(rejected) {
+        resp.status(500).send({message: "Server error. Please, try latter..."});
+    });
 })
 
 app.get('/check_user', function(req, resp) {
@@ -35,29 +46,63 @@ app.get('/check_user', function(req, resp) {
 
 // Add new intruder detenction to database.
 // Add new fire detection to database.
-// Consult database to show info.
 // Send response to hardware.
-// Check hardware status.
 
-app.get('/get_data', function(req, resp) {
-    
+// Consult database to show info.
+app.get('/alarms', function(req, resp) {
+    const session = req.query.session;
+    const user_id = req.query.user;
+    const hard_id = req.query.hard;
+
+    get_session(session).then(function(resolved) {
+        if (resolved) {
+            connection.query(`SELECT al.Id, al.Type_id, al.Alarm_date, aty.Alarm_type, ur.User_resp FROM alarms al
+            INNER JOIN alarm_types aty ON al.Type_id = aty.Id
+            INNER JOIN user_resps ur ON al.Resp_id = ur.Id
+            WHERE al.Hard_id = ${hard_id};`, function(error, data) {
+                if (error) {
+                    console.log(error);
+                    resp.status(500).send({message: "Server error. Pease, try latter..."});
+                } else {
+                    console.log(data);
+                    resp.status(200).send({items: data});
+                }
+            });
+        } else {
+            resp.status(401).send({message: "Unauthorized action. Session not found..."});
+        }
+    }, function(rejected) {
+        resp.status(500).send({message: "Server error. Pease, try latter..."});
+    });
+});
+
+app.get('/hardwares', function(req, resp) {
+    const session_id = req.query.session;
+    const user_id = req.query.user_id;
+
+    get_session(session_id).then(function(resolved) {
+        if (resolved) {
+            connection.query(`SELECT * FROM hardwares WHERE Owner_id=${user_id}`, function(error, data) {
+                if (error) {
+                    resp.status(500).send({message: "Sorry. Server error. Please, try later..."});
+                } else {
+                    const items = data[0];
+                    console.log(data);
+                    resp.status(200).send({items: data});
+                }
+            });
+        } else {
+            resp.status(401).send({message: 'Unauthorized action. Incorrect session provided...'});
+        }
+    },
+    function(rejected) {
+        resp.status(500).send({message: "Sorry. Server error. Please, try later..."});
+    });
 });
 
 
 
 // Functions
-function verify_session(req, resp, next){
-    const cookie = req.cookies['session_id'];
-    get_session(cookie).then(function(resolved){
-        req.user_id = resolved.User_id;
-        req.username = resolved.Name;
-        next();
-    }, function(rejected){
-        console.log(rejected);
-        resp.redirect('/login');
-    });
-}
-
 async function get_session(cookie){
     return(
         new Promise(function(resolve, reject){
@@ -67,9 +112,9 @@ async function get_session(cookie){
                     reject(error);
                 }else{
                     if(data.length > 0){
-                        resolve(data[0]);
+                        resolve(true);
                     }else{
-                        reject("Session not found...");
+                        resolve(false);
                     }
                 }
             });
