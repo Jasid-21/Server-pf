@@ -4,6 +4,7 @@ const connection = require('./database.js');
 
 
 router.get('/home', function (req,res){
+  const session =req.query.session;
 
      connection.query(`SELECT alarms.Alarm_date, alarm_types.Alarm_type,users.Username , user_resps.User_resp FROM alarms
         inner join hardwares on alarms.Hard_id = hardwares.Id
@@ -11,9 +12,9 @@ router.get('/home', function (req,res){
         inner join sessions on hardwares.owner_id = sessions.Id
         inner join users on sessions.User_id = users.Id
         inner join user_resps on alarms.Resp_id = user_resps.Id
-        WHERE sessions.user_id = '${user_id}' 
+        WHERE sessions.session = '${session}' 
         order by alarms.id desc
-        limit 2`,(err, info)=>{
+        limit 1`,(err, info)=>{
         if (err) throw err
         else{
         res.status(200).json({
@@ -24,6 +25,7 @@ router.get('/home', function (req,res){
 });
 
 router.get('/history', function (req,res){ 
+  const User_id =req.query.User_id;
 
     connection.query(`SELECT alarms.Alarm_date, alarm_types.Alarm_type,users.Username , user_resps.User_resp FROM alarms
        inner join hardwares on alarms.Hard_id = hardwares.Id
@@ -31,7 +33,7 @@ router.get('/history', function (req,res){
        inner join sessions on hardwares.owner_id = sessions.Id
        inner join users on sessions.User_id = users.Id
        inner join user_resps on alarms.Resp_id = user_resps.Id
-       WHERE sessions.user_id = '${user_id}' 
+       WHERE sessions.User_id = '${User_id}' 
        order by alarms.id `,(err, history)=>{
         if (err) throw err
         else{
@@ -50,7 +52,7 @@ app.post('/resp',(req,res)=>{
       if (err) throw err
       else 
       {
-        console.log("Respuesta recibida");  
+        console.log("Respuesta recibida", result);  
       }
     }
 
