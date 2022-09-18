@@ -27,7 +27,6 @@ app.get('/check_status', function(req, resp) {
 })
 
 app.get('/check_user', function(req, resp) {
-    console.log("Enter in check state");
     const session_id = req.query.session_id;
 
     connection.query(`SELECT Id FROM sessions WHERE Session = '${session_id}'`, function(error, data) {
