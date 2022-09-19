@@ -103,10 +103,7 @@ app.post('/resp',(req,resp)=>{
 
 })
 
-
-
-
-  
+ 
   
 
 
@@ -121,11 +118,13 @@ app.put('/modify',(req,resp)=>{
   get_session(session).then(function(resolved) {
     if (resolved) {
 
-  connection.query(`UPDATE hardwares SET Hard_serie, Instalation_date, Address,
+  connection.query(`UPDATE hardwares SET Hard_serie = ?, Instalation_date = ?, Address = ?,
   inner join hardwares on alarms.Hard_id = hardwares.Id
   inner join sessions on hardwares.owner_id = sessions.Id
   inner join users on sessions.User_id = users.Id
-  WHERE sessions.User_id = '${User_id}'`,
+  WHERE sessions.User_id = '${User_id}'`,[
+    req.query.Hard_serie, req.query.Instalation_date, req.query.Address
+  ],
   (error, update)=>{
     if (!Hard_serie || !Instalation_date || !Address) {
       return resp.status(500).send("No hay suficientes datos");
