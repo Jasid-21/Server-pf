@@ -4,7 +4,7 @@ const app = express();
 const bcrypt = require('bcrypt');
 const parser  = require('cookie-parser');
 const path = require('path');
-const connection = require('./routes/database');
+//const connection = require('./routes/database');
 const moment = require('moment');
 const net = require('net');
 
@@ -19,6 +19,7 @@ app.get('/test', function(req, resp) {
 });
 
 // Check hardware status.
+
 app.get('/check_status', function(req, resp) {
     const session = req.query.session;
     get_session(session).then(function(resolved) {
@@ -32,6 +33,8 @@ app.get('/check_status', function(req, resp) {
         resp.status(500).send({message: "Server error. Please, try latter..."});
     });
 })
+
+/*
 
 app.get('/check_user', function(req, resp) {
     const session_id = req.query.session_id;
@@ -163,6 +166,7 @@ async function get_session(cookie){
         })
     )
 }
+*/
 
 const server = net.createServer((socket) => {
     socket.on('connection', (client) => {
