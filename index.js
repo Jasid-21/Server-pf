@@ -5,11 +5,18 @@ const bcrypt = require('bcrypt');
 const parser  = require('cookie-parser');
 const path = require('path');
 const connection = require('./routes/database');
+const moment = require('moment');
+const net = require('net');
 
 app.set('port', process.env.PORT || 3000);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(require('./routes/loginRoutes.js'));
 app.use(require('./routes/signupRoutes.js'));
+
+app.get('/test', function(req, resp) {
+    console.log("Enter in test...");
+    resp.status(200).send('This works!');
+});
 
 // Check hardware status.
 app.get('/check_status', function(req, resp) {
@@ -79,6 +86,7 @@ app.get('/alarms', function(req, resp) {
 app.get('/hardwares', function(req, resp) {
     const session_id = req.query.session;
     const user_id = req.query.user_id;
+    console.log(session_id);
 
     get_session(session_id).then(function(resolved) {
         if (resolved) {
@@ -100,6 +108,40 @@ app.get('/hardwares', function(req, resp) {
     });
 });
 
+app.post('/newHardware', function(req, resp) {
+    console.log("Enter in newHardware...");
+    const session = req.query.session;
+    const user = req.query.user;
+    const name = req.query.name;
+    const address = req.query.address;
+    const code = req.query.code;
+    const date = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    console.log(session);
+
+    get_session(session).then(
+        function(resolved){
+            console.log(resolved);
+            if (resolved) {
+                connection.query(`INSERT INTO hardwares (Hard_serie, Instalation_date, Address, Owner_id, Name) 
+                VALUES ('${code}', '${date}', '${address}', '${user}', '${name}');`, function(error) {
+                    if (error) {
+                        console.log(error);
+                        resp.status(500).send({message: "Sorry. Server error. Please, try later..."});
+                    } else {
+                        resp.status(200).send();
+                    }
+                });
+            } else {
+                resp.status(401).send({message: "Session not found..."});
+            }
+        },
+        function(rejected){
+            resp.status(500).send({message: "Sorry. Server error. Please, try later..."});
+        }
+    );
+});
+
 
 
 // Functions
@@ -109,6 +151,7 @@ async function get_session(cookie){
             connection.query(`SELECT * FROM Sessions 
             INNER JOIN Users ON Sessions.User_id = Users.Id AND Sessions.Session = '${cookie}'`, function(error, data){
                 if(error){
+                    console.log(error);
                     reject(error);
                 }else{
                     if(data.length > 0){
@@ -122,6 +165,39 @@ async function get_session(cookie){
     )
 }
 
-app.listen(app.get('port'), function() {
-    console.log('listening on port ' + app.get('port'));
+const server = net.createServer((socket) => {
+    socket.on('connection', (client) => {
+        console.log("New client connected!");
+    })
+
+    socket.on('data', (data) => {
+        console.log(data.toString());
+    });
+
+    socket.write("Hello world!!");
+
+    socket.end("Conection closed...");
+}).on('error', (err) => {
+    console.log(err);
 });
+
+server.listen(3001, () => {
+    console.log("WebSocket listening in port: 3001");
+});
+app.listen(app.get('port'), function() {
+    console.log('Http listening on port ' + app.get('port'));
+});
+
+/*
+const { Server } = require('socket.io');
+
+
+
+const io = new Server(server);
+
+io.on('connection', function(socket) {
+    console.log("New connection");
+
+    io.emit('connected', "connected");
+});
+*/
