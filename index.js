@@ -15,7 +15,8 @@ app.use(require('./routes/signupRoutes.js'));
 
 app.get('/test', function(req, resp) {
     console.log("Enter in test...");
-    resp.status(200).send('This works!');
+    const port = app.get('port');
+    resp.status(200).send(`http listening in port: ${port}`);
 });
 
 // Check hardware status.
