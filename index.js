@@ -4,19 +4,104 @@ const app = express();
 const bcrypt = require('bcrypt');
 const parser  = require('cookie-parser');
 const path = require('path');
-//const connection = require('./routes/database');
+const connection = require('./routes/database');
 const moment = require('moment');
 const net = require('net');
+const Server = require('socket.io').Server;
+
+var sockets = new Array();
 
 app.set('port', process.env.PORT || 3000);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(require('./routes/loginRoutes.js'));
 app.use(require('./routes/signupRoutes.js'));
 
+const httpServer = app.listen(app.get('port'), function() {
+    console.log('Http listening on port ' + app.get('port'));
+});
+
+const io = new Server(httpServer);
+io.on('connection', function() {
+    console.log("New client");
+});
+
+io.on('message', function(msg) {
+    console.log(msg);
+});
+
+io.listen(3002);
+
+
+
+
+
+
+
+
+
+
+
+
 app.get('/test', function(req, resp) {
     console.log("Enter in test...");
     const port = app.get('port');
     resp.status(200).send(`http listening in port: ${port}`);
+});
+
+const server = net.createServer(socket => {
+    const date = moment();
+    const code = date.format('YYYY') + date.format('MM') + date.format('DD') + create_token(5);
+    sockets.push([socket, code]);
+
+    socket.write(code);
+
+    socket.on('data', (data) => {
+        console.log(data.toString());
+        const array = data.toString().split('-');
+
+        if (Number(array[0]) == 0) {
+            const old = array[1];
+            const code = array[2];
+
+            //Find and delete old connection.
+            for (var i=0; i<sockets.length; i++) {
+                if (sockets[i][1] == code) {
+                    sockets.splice(i, 1);
+                    break;
+                }
+            }
+
+            //Stablish the new connection.
+            for (var s in sockets) {
+                if (s[1] == old) {
+                    s[1] = code;
+                }
+            }
+
+            //Send test message to client.
+            socket.write("Done! \n");
+        } else {
+            console.log(data.toString());
+        }
+    });
+});
+
+setInterval(function() {
+    if (sockets.length > 0) {
+        for (var i = 0; i<sockets.length; i++) {
+            const s = sockets[i];
+    
+            try {
+                s[0].write("Test!");
+            } catch(err) {
+                console.log(err);
+            }
+        }
+    }
+}, 10000);
+
+server.listen(3001, () => {
+    console.log("WebSocket listening in port: 3001");
 });
 
 // Check hardware status.
@@ -35,7 +120,7 @@ app.get('/check_status', function(req, resp) {
     });
 })
 
-/*
+
 
 app.get('/check_user', function(req, resp) {
     const session_id = req.query.session_id;
@@ -167,41 +252,17 @@ async function get_session(cookie){
         })
     )
 }
-*/
 
-const server = net.createServer((socket) => {
-    socket.on('connection', (client) => {
-        console.log("New client connected!");
-    })
+function create_token(tam){
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lower = upper.toLowerCase();
+    const number = "0123456789";
+    const total = upper + lower + number;
+    var token = "";
 
-    socket.on('data', (data) => {
-        console.log(data.toString());
-    });
+    for(var i=0; i<tam; i++){
+        token += total[Math.floor(Math.random()*(total.length - 1))];
+    }
 
-    socket.write("Hello world!!");
-
-    socket.end("Conection closed...");
-}).on('error', (err) => {
-    console.log(err);
-});
-
-server.listen(3001, () => {
-    console.log("WebSocket listening in port: 3001");
-});
-app.listen(app.get('port'), function() {
-    console.log('Http listening on port ' + app.get('port'));
-});
-
-/*
-const { Server } = require('socket.io');
-
-
-
-const io = new Server(server);
-
-io.on('connection', function(socket) {
-    console.log("New connection");
-
-    io.emit('connected', "connected");
-});
-*/
+    return token;
+}
