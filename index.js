@@ -7,9 +7,11 @@ const path = require('path');
 const connection = require('./routes/database');
 const moment = require('moment');
 const net = require('net');
-const Server = require('socket.io').Server;
+const Server = require('websocket').server;
 
 var sockets = new Array();
+var webSockets = new Array();
+var pivote = new Array();
 
 app.set('port', process.env.PORT || 3000);
 app.use(express.static(path.join(__dirname, 'public')));
@@ -20,35 +22,48 @@ const httpServer = app.listen(app.get('port'), function() {
     console.log('Http listening on port ' + app.get('port'));
 });
 
-const io = new Server(httpServer);
-io.on('connection', function() {
-    console.log("New client");
+const socketServer = new Server({
+    httpServer:httpServer,
+    autoAcceptConnections: false
 });
 
-io.on('message', function(msg) {
-    console.log(msg);
-});
+socketServer.on('request', function(request) {
+    const connection = request.accept(null, request.origin);
+    console.log("New user connected!");
 
-io.listen(3002);
+    connection.on('message', (msg) => {
+        const utf = JSON.parse(msg.utf8Data);
 
+        console.log(utf);
+        if (utf.type == 'code') {
+            const user_id = utf.msg;
 
+            var found = false;
+            for (var client of webSockets) {
+                if (client[0] == user_id) {
+                    client[1] = connection;
+                    found = true;
+                    break;
+                }
+            }
 
+            if (!found) {
+                webSockets.push([user_id, connection]);
+            }
+        }
+    });
 
+    connection.on('close', (code, desc) => {
+        console.log("Websocket connection lost...");
+    });
 
-
-
-
-
-
-
-
-app.get('/test', function(req, resp) {
-    console.log("Enter in test...");
-    const port = app.get('port');
-    resp.status(200).send(`http listening in port: ${port}`);
+    connection.on('error', (err) => {
+        console.log(err);
+    });
 });
 
 const server = net.createServer(socket => {
+    socket.setKeepAlive(true,10000);
     const date = moment();
     const code = date.format('YYYY') + date.format('MM') + date.format('DD') + create_token(5);
     sockets.push([socket, code]);
@@ -59,7 +74,8 @@ const server = net.createServer(socket => {
         console.log(data.toString());
         const array = data.toString().split('-');
 
-        if (Number(array[0]) == 0) {
+        const num = Number(array[0]);
+        if (num == 0) {
             const old = array[1];
             const code = array[2];
 
@@ -72,7 +88,7 @@ const server = net.createServer(socket => {
             }
 
             //Stablish the new connection.
-            for (var s in sockets) {
+            for (var s of sockets) {
                 if (s[1] == old) {
                     s[1] = code;
                 }
@@ -80,25 +96,81 @@ const server = net.createServer(socket => {
 
             //Send test message to client.
             socket.write("Done! \n");
-        } else {
-            console.log(data.toString());
         }
-    });
-});
 
-setInterval(function() {
-    if (sockets.length > 0) {
-        for (var i = 0; i<sockets.length; i++) {
-            const s = sockets[i];
-    
-            try {
-                s[0].write("Test!");
-            } catch(err) {
-                console.log(err);
+        if (num == 1) {
+            //Register in database.
+            const code = array[1];
+            const type = array[2];
+            /*
+            connection.query(`SELECT * FROM hardwares WHERE Hard_serie = '${code}'`, function(err, data) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    const row = data[0];
+                    const hard_id = row.Id;
+                    const date = moment().format('YYYY-MM-DD HH:mm:ss');
+
+                    connection.query(`INSERT INTO alarms (Hard_id, Alarm_date, Type_id, Resp_id)
+                    VALUES (${hard_id}, '${date}', ${type}, 1)`);
+                }
+            });
+            */
+
+            //Send alert to app.
+            console.log(code);
+            console.log(pivote);
+            var found1 = false;
+            for (var piv of pivote) {
+                if (piv[1] == code) {
+                    found1 = true;
+                    const user_id = piv[0];
+                    
+                    var found2 = false;
+                    for (var client of webSockets) {
+                        if (client[0] == user_id) {
+                            found2 = true;
+
+                            var msg_send;
+                            if (Number(type) == 1) {
+                                msg_send = 'Intruder detection!!';
+                            }
+
+                            if (Number(type) == 1) {
+                                msg_send = 'Fire detection!!';
+                            }
+
+                            if (Number(type) == 1) {
+                                msg_send = 'Smoke detection!!';
+                            }
+
+                            client[1].send(JSON.stringify({type: 'alert', msg: msg_send}));
+                            break;
+                        }
+                    }
+
+                    if (!found2) {
+                        console.log("Client not found...");
+                    }
+
+                    break;
+                }
+            }
+
+            if (!found1) {
+                console.log("Hardware connection not found...");
             }
         }
-    }
-}, 10000);
+    });
+
+    socket.on('error', (err) => {
+        console.log(err);
+    });
+
+    socket.on('close', () => {
+        console.log("socket connection lost...");
+    });
+});
 
 server.listen(3001, () => {
     console.log("WebSocket listening in port: 3001");
@@ -108,10 +180,31 @@ server.listen(3001, () => {
 
 app.get('/check_status', function(req, resp) {
     const session = req.query.session;
+    const hard = req.query.hard;
     get_session(session).then(function(resolved) {
         if (resolved) {
-            //[Here must be wrote the algorythm to check status to hardware]
-            resp.status(200).send();
+            for (var item of sockets) {
+                console.log(hard);
+                console.log(item[1]);
+                if (item[1] == hard) {
+                    console.log("Enter in 159");
+                    try {
+                        const bool = item[0].write('3-null');
+                        if (bool) {
+                            console.log(bool);
+                            resp.status(200).send();
+                        } else {
+                            resp.status(503).send();
+                        }
+                        
+                    } catch (err) {
+                        console.log(err);
+                        resp.status(500).send();
+                    }
+
+                    break;
+                }
+            }
         } else {
             resp.status(401).send({message: "Unauthorized action. Session not found..."});
         }
@@ -138,10 +231,6 @@ app.get('/check_user', function(req, resp) {
         }
     });
 });
-
-// Add new intruder detenction to database.
-// Add new fire detection to database.
-// Send response to hardware.
 
 // Consult database to show info.
 app.get('/alarms', function(req, resp) {
@@ -182,8 +271,21 @@ app.get('/hardwares', function(req, resp) {
                 if (error) {
                     resp.status(500).send({message: "Sorry. Server error. Please, try later..."});
                 } else {
-                    const items = data[0];
                     console.log(data);
+
+                    for (var hw of data) {
+                        var found = false;
+                        for (var piv of pivote) {
+                            if (piv[1] == hw.Hard_serie) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            pivote.push([user_id, hw.Hard_serie]);
+                        }
+                    }
+
                     resp.status(200).send({items: data});
                 }
             });
@@ -228,6 +330,38 @@ app.post('/newHardware', function(req, resp) {
             resp.status(500).send({message: "Sorry. Server error. Please, try later..."});
         }
     );
+});
+
+app.post('/response', function(req, resp) {
+    const resp_id = req.query.resp_id;
+    const client_id = req.query.client;
+
+    if (resp_id == 1) {
+        var found = false;
+        for (var row in pivote) {
+            if (row[0] == client_id) {
+                const code = row[1];
+                var found2 = false;
+                for (var socket of sockets) {
+                    if (socket[1] == code) {
+                        socket[0].write('low');
+                        found2 = true;
+                        break;
+                    }
+                }
+
+                if (!found2) {
+                    console.log("Socket not found...");
+                }
+                found = true;
+                break;
+            }
+        }
+
+        if(!found) {
+            console.log("Client code not found...");
+        }
+    }
 });
 
 
