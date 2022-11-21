@@ -113,7 +113,11 @@ const server = net.createServer(socket => {
                     const date = moment().format('YYYY-MM-DD HH:mm:ss');
 
                     connection.query(`INSERT INTO alarms (Hard_id, Alarm_date, Type_id, Resp_id)
-                    VALUES (${hard_id}, '${date}', ${type}, 1)`);
+                    VALUES (${hard_id}, '${date}', ${type}, 1)`, function(err) {
+                        if (err) {
+                            console.log(err);
+                        }
+                    });
                 }
             });
 
