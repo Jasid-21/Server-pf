@@ -101,8 +101,9 @@ const server = net.createServer(socket => {
         if (num == 1) {
             //Register in database.
             const code = array[1];
-            const type = array[2];
-            /*
+            const type = array[2][0];
+            console.log(type);
+
             connection.query(`SELECT * FROM hardwares WHERE Hard_serie = '${code}'`, function(err, data) {
                 if (err) {
                     console.log(err);
@@ -115,7 +116,6 @@ const server = net.createServer(socket => {
                     VALUES (${hard_id}, '${date}', ${type}, 1)`);
                 }
             });
-            */
 
             //Send alert to app.
             console.log(code);
