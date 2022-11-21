@@ -148,7 +148,7 @@ const server = net.createServer(socket => {
                                 msg_send = 'Smoke detection!!';
                             }
 
-                            client[1].send(JSON.stringify({type: 'alert', msg: msg_send}));
+                            client[1].send(JSON.stringify({type: 'alert', msg: msg_send, sens: type}));
                             break;
                         }
                     }
