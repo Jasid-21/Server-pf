@@ -374,8 +374,8 @@ app.post('/response', function(req, resp) {
 async function get_session(cookie){
     return(
         new Promise(function(resolve, reject){
-            connection.query(`SELECT * FROM Sessions 
-            INNER JOIN Users ON Sessions.User_id = Users.Id AND Sessions.Session = '${cookie}'`, function(error, data){
+            connection.query(`SELECT * FROM sessions 
+            INNER JOIN users ON sessions.User_id = users.Id AND sessions.Session = '${cookie}'`, function(error, data){
                 if(error){
                     console.log(error);
                     reject(error);
