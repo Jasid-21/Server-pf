@@ -144,12 +144,12 @@ const server = net.createServer(socket => {
 
                             var i;
 
-                            for (i=1; i++) {
+                            for (i=0; i<2; i++) {
                                 var msg_send;
                                 if (Number(type) == 1) {
                                     msg_send = 'Intruder detection!!';
                                 }
-                                if (i=2){
+                                if (i=1){
                                     client[1].send(JSON.stringify({type: 'alert', msg: msg_send, sens: type}));
                                     break;
                                 }
