@@ -102,7 +102,7 @@ const server = net.createServer(socket => {
             //Register in database.
             const code = array[1];
             var type;
-            if (!array[2][0]) {
+            if (array[2].length > 0) {
                 return;
             }
             type = array[2][0];
