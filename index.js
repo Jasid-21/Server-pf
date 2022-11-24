@@ -101,7 +101,11 @@ const server = net.createServer(socket => {
         if (num == 1) {
             //Register in database.
             const code = array[1];
-            const type = array[2][0];
+            var type;
+            if (!array[2][0]) {
+                return;
+            }
+            type = array[2][0];
             console.log(type);
 
             connection.query(`SELECT * FROM hardwares WHERE Hard_serie = '${code}'`, function(err, data) {
