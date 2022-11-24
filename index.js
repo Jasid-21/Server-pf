@@ -336,6 +336,10 @@ app.post('/newHardware', function(req, resp) {
     );
 });
 
+app.get('/', function(req, resp) {
+    resp.send("Hello world");
+})
+
 app.post('/response', function(req, resp) {
     const resp_id = req.query.resp_id;
     const client_id = req.query.client;
