@@ -102,9 +102,9 @@ const server = net.createServer(socket => {
             const code = array[1];
             var type;
             if (array[2].length > 0) {
-                return;
+                type = array[2][array[2].length - 1];
             }
-            type = array[2][0];
+            
             console.log(type);
 
             connection.query(`SELECT * FROM hardwares WHERE Hard_serie = '${code}'`, function(err, data) {
