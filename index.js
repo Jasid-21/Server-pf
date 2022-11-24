@@ -142,21 +142,35 @@ const server = net.createServer(socket => {
                         if (client[0] == user_id) {
                             found2 = true;
 
-                            var msg_send;
-                            if (Number(type) == 1) {
-                                msg_send = 'Intruder detection!!';
+                            var i;
+
+                            for (i=1; i++) {
+                                var msg_send;
+                                if (Number(type) == 1) {
+                                    msg_send = 'Intruder detection!!';
+                                }
+                                if (i=2){
+                                    client[1].send(JSON.stringify({type: 'alert', msg: msg_send, sens: type}));
+                                    break;
+                                }
+
+
                             }
+                           
 
                             if (Number(type) == 3) {
                                 msg_send = 'Fire detection!!';
+                                client[1].send(JSON.stringify({type: 'alert', msg: msg_send, sens: type}));
+                            break;
                             }
 
                             if (Number(type) == 2) {
                                 msg_send = 'Smoke detection!!';
+                                client[1].send(JSON.stringify({type: 'alert', msg: msg_send, sens: type}));
+                            break;
                             }
 
-                            client[1].send(JSON.stringify({type: 'alert', msg: msg_send, sens: type}));
-                            break;
+                            
                         }
                     }
 
@@ -185,61 +199,7 @@ server.listen(3001, () => {
     console.log("WebSocket listening in port: 3001");
 });
 
-// Check hardware status.
 
-app.get('/check_status', function(req, resp) {
-    const session = req.query.session;
-    const hard = req.query.hard;
-    get_session(session).then(function(resolved) {
-        if (resolved) {
-            for (var item of sockets) {
-                console.log(hard);
-                console.log(item[1]);
-                if (item[1] == hard) {
-                    console.log("Enter in 159");
-                    try {
-                        const bool = item[0].write('3-null');
-                        if (bool) {
-                            console.log(bool);
-                            resp.status(200).send();
-                        } else {
-                            resp.status(503).send();
-                        }
-                        
-                    } catch (err) {
-                        console.log(err);
-                        resp.status(500).send();
-                    }
-
-                    break;
-                }
-            }
-        } else {
-            resp.status(401).send({message: "Unauthorized action. Session not found..."});
-        }
-    }, function(rejected) {
-        resp.status(500).send({message: "Server error. Please, try latter..."});
-    });
-})
-
-
-
-app.get('/check_user', function(req, resp) {
-    const session_id = req.query.session_id;
-
-    connection.query(`SELECT Id FROM sessions WHERE Session = '${session_id}'`, function(error, data) {
-        if (error) {
-            console.log(error);
-            resp.status(500).send({message: "Error trying to connect with database..."});
-        } else {
-            if (data.length > 0) {
-                resp.status(200).send();
-            } else {
-                resp.status(401).send();
-            }
-        }
-    });
-});
 
 // Consult database to show info.
 app.get('/alarms', function(req, resp) {
@@ -341,41 +301,9 @@ app.post('/newHardware', function(req, resp) {
     );
 });
 
-app.get('/', function(req, resp) {
-    resp.send("Hello world");
-})
 
-app.post('/response', function(req, resp) {
-    const resp_id = req.query.resp_id;
-    const client_id = req.query.client;
 
-    if (resp_id == 1) {
-        var found = false;
-        for (var row in pivote) {
-            if (row[0] == client_id) {
-                const code = row[1];
-                var found2 = false;
-                for (var socket of sockets) {
-                    if (socket[1] == code) {
-                        socket[0].write('low');
-                        found2 = true;
-                        break;
-                    }
-                }
 
-                if (!found2) {
-                    console.log("Socket not found...");
-                }
-                found = true;
-                break;
-            }
-        }
-
-        if(!found) {
-            console.log("Client code not found...");
-        }
-    }
-});
 
 
 
