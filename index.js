@@ -72,7 +72,7 @@ const server = net.createServer(socket => {
 
     socket.on('data', (data) => {
         const array = data.toString().split('-');
-        console.log(array);
+        console.log("array: ", array);
         const num = Number(array[0]);
         if (num == 0) {
             const old = array[1];
