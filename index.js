@@ -98,7 +98,7 @@ const server = net.createServer(socket => {
             socket.write("Done! \n");
         }
 
-        if (num == 1) {
+        if (num != 0) {
             //Register in database.
             const code = array[1];
             var type;
