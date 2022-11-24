@@ -126,8 +126,6 @@ const server = net.createServer(socket => {
             });
 
             //Send alert to app.
-            console.log(code);
-            console.log(pivote);
             var found1 = false;
             for (var piv of pivote) {
                 if (piv[1] == code) {
@@ -160,8 +158,6 @@ const server = net.createServer(socket => {
                     if (!found2) {
                         console.log("Client not found...");
                     }
-
-                    break;
                 }
             }
 
