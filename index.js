@@ -144,11 +144,11 @@ const server = net.createServer(socket => {
                                 msg_send = 'Intruder detection!!';
                             }
 
-                            if (Number(type) == 1) {
+                            if (Number(type) == 3) {
                                 msg_send = 'Fire detection!!';
                             }
 
-                            if (Number(type) == 1) {
+                            if (Number(type) == 2) {
                                 msg_send = 'Smoke detection!!';
                             }
 
